@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t akiprotich/react-test -f ./client/Dockerfile.dev ./client   # .client context
+
+script:
+  - docker run akiprotich/react-test npm test -- --coverage  #-- --coverage ensures tests exits after running
+
+after_success:
+  - docker build -t akiprotich/multi-client ./client
+  - docker build -t akiprotich/multi-nginx ./nginx
+  - docker build -t akiprotich/multi-server ./server
+  - docker build -t akiprotich/multi-worker ./worker
+  #Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push akiprotich/multi-client
+  - docker push akiprotich/multi-nginx
+  - docker push akiprotich/multi-server
+  - docker push akiprotich/multi-worker
